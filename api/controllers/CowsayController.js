@@ -20,15 +20,7 @@ module.exports = {
     if(s.length > 0) {
       sentence = s[0].sentence;
     }
-
-    if (s[0].picture) {
-      const options = {
-        key: 'AKIAJOCSBD4KTGNIE2YQ' ,
-        secret: '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',
-        bucket : 'lp-cdad-2018'
-      };
-    }
-
+    
     return res.view('cowsay', { picture: s[0].picture, cow: cowsay.say({
       f: process.env.COW || 'stegosaurus',
       text : sentence,
@@ -61,19 +53,6 @@ module.exports = {
       })
       return res.redirect('/say');
     })
-    /*await req.file('file').upload({
-      dirname: require('path').resolve(sails.config.appPath, 'assets/images')
-    }, async function (err, uploadedFiles) {
-      if (err) return res.serverError(err);
-
-      var tmp_split = uploadedFiles[0].fd.split('/');
-      var saved_filename = tmp_split[tmp_split.length-1];
-
-      await Sentences.create({
-        sentence: req.param('sentence'), picture: saved_filename 
-      })
-      return res.redirect('/say');
-    })*/
   },
 };
 
