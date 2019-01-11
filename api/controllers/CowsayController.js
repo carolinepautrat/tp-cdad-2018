@@ -7,6 +7,37 @@
 
 var cowsay = require('cowsay');
 
+var kue = require('kue');
+    var queue = kue.createQueue({
+      redis: {
+        port: 6379,
+        host: 'redis',
+      }
+    });
+
+    var mailer = require('sails-service-mailer')('smtp', {
+      from: 'cdad@l3o.eu',
+      subject: 'cowsay project',
+      provider: { 
+        port: 587,
+        host:'smtp:mailgun.org',
+        auth: {
+          user: 'postmaster@mailgun.l3o.eu',
+          pass: 'fedbe91ae5e3529f94528dd311bea4c9-060550c6-d42c872f'
+        }
+      }})
+
+    queue.process('email', function(job, done){
+      // Send mail here
+      mailer.send({
+        to: job.data.title,
+        text: job.data.body
+      })
+      .then((res) => console.log(res))
+    .catch((res) => console.log(res))
+    });
+    
+
 module.exports = {
   /**
    * `CowsayController.say()`
@@ -20,7 +51,7 @@ module.exports = {
     if(s.length > 0) {
       sentence = s[0].sentence;
     }
-    
+
     return res.view('cowsay', { picture: s[0].picture, cow: cowsay.say({
       f: process.env.COW || 'stegosaurus',
       text : sentence,
@@ -49,8 +80,15 @@ module.exports = {
       if (err) return res.serverError(err);
 
       await Sentences.create({
-        sentence: req.param('sentence'), picture: uploadedFiles[0].extra.Location 
+        sentence: req.param('sentence'), picture: uploadedFiles[0].extra.Location
       })
+
+      queue.create('email', {
+        title: 'Thanks you for your sentence!',
+        to: req.param('email'),
+        body: 'Thanks you for helping us to improve our database. -CowVader'
+      }).priority('high').attempts(5).save();
+
       return res.redirect('/say');
     })
   },
